@@ -11,4 +11,6 @@ android/app/debug.keystore
 ios/build/
 ios/Pods/
 ios/DerivedData/
+ios/Podfile.lock
+ios/*.xcworkspace
 *.xcworkspace/xcuserdata/

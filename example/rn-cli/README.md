@@ -40,47 +40,61 @@ npm install
 npm run build
 ```
 
-### 2. Generate native code
-
-This project only ships JS/TS source files. You need to generate the `android/` and `ios/` native project directories once using the React Native CLI:
-
-```sh
-# from the repo root — creates a temporary scaffold
-npx react-native init NLPCalendarRNCLI --template react-native-template-typescript --version 0.72.7 --skip-install
-
-# copy the native directories into this example folder
-cp -r NLPCalendarRNCLI/android example/rn-cli/
-cp -r NLPCalendarRNCLI/ios    example/rn-cli/
-
-# clean up the temporary scaffold
-rm -rf NLPCalendarRNCLI
-```
-
-### 3. Install example dependencies
+### 2. Install example dependencies
 
 ```sh
 cd example/rn-cli
 npm install
 ```
 
-### 4a. Run on iOS
+### 3a. Run on iOS
+
+Install CocoaPods dependencies, then run:
 
 ```sh
 cd ios && pod install && cd ..
 npm run ios
 ```
 
-### 4b. Run on Android
+### 3b. Run on Android
+
+Make sure an Android emulator is running (or a device is connected), then:
 
 ```sh
 npm run android
 ```
 
-### 4c. Start the Metro bundler only
+### 3c. Start the Metro bundler only
 
 ```sh
 npm start
 ```
+
+---
+
+## Native project details
+
+The `android/` and `ios/` native project directories are **fully committed** to this repository. They are based on the standard React Native 0.72.7 template with:
+
+| Setting | Value |
+|---|---|
+| App name | `NLPCalendarRNCLI` |
+| Android package | `com.nlpcalendarrncli` |
+| iOS bundle ID | `com.nlpcalendarrncli` |
+| Min Android SDK | 21 (Android 5.0) |
+| iOS deployment target | 13.0 |
+| JS engine | Hermes |
+
+### Gradle wrapper
+
+The `android/gradlew` script references `gradle/wrapper/gradle-wrapper.jar`. If this binary is absent after a fresh clone, regenerate it:
+
+```sh
+cd android
+gradle wrapper --gradle-version=8.0.1
+```
+
+Or install Gradle 8.0.1 system-wide and the wrapper will download automatically on first `./gradlew` run.
 
 ---
 
@@ -112,13 +126,43 @@ npm run build
 
 ```
 example/rn-cli/
-  index.js         AppRegistry entry point
-  App.tsx          Main demo screen
-  app.json         name / displayName for the app
-  babel.config.js  metro-react-native-babel-preset
-  metro.config.js  Metro config — watches repo root for lib changes
-  package.json     Dependencies; library linked via "file:../.."
-  tsconfig.json    TypeScript config (extends @tsconfig/react-native)
-  android/         Generated native Android project (not in git)
-  ios/             Generated native iOS project (not in git)
+  index.js                          AppRegistry entry point
+  App.tsx                           Main demo screen
+  app.json                          App name / displayName
+  babel.config.js                   metro-react-native-babel-preset
+  metro.config.js                   Metro config — watches repo root for lib changes
+  package.json                      Dependencies; library linked via "file:../.."
+  tsconfig.json                     TypeScript config (extends @tsconfig/react-native)
+  android/
+    build.gradle                    Root Gradle build file
+    settings.gradle                 Module settings
+    gradle.properties               Gradle & RN configuration flags
+    gradlew / gradlew.bat           Gradle wrapper scripts
+    gradle/wrapper/
+      gradle-wrapper.properties     Gradle distribution URL (8.0.1)
+    app/
+      build.gradle                  App-level Gradle build
+      proguard-rules.pro            ProGuard configuration
+      src/main/
+        AndroidManifest.xml         App manifest
+        java/com/nlpcalendarrncli/
+          MainActivity.kt           Main activity (Kotlin)
+          MainApplication.kt        Application class (Kotlin)
+        res/
+          values/strings.xml        App name string
+          values/styles.xml         AppTheme style
+          drawable/                 RN drawable resources
+      src/debug/...ReactNativeFlipper.java   Flipper (debug only)
+      src/release/...ReactNativeFlipper.java  No-op Flipper stub
+  ios/
+    Podfile                         CocoaPods configuration
+    .xcode.env                      Node binary path for Xcode build
+    NLPCalendarRNCLI/
+      AppDelegate.h / .mm           iOS app delegate
+      main.m                        C entry point
+      Info.plist                    App metadata
+      LaunchScreen.storyboard       Splash screen
+    NLPCalendarRNCLI.xcodeproj/
+      project.pbxproj               Xcode project file
 ```
+

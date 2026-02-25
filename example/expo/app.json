@@ -4,8 +4,17 @@
     "slug": "nlp-calendar-example",
     "version": "1.0.0",
     "orientation": "portrait",
+    "userInterfaceStyle": "light",
     "platforms": ["ios", "android", "web"],
-    "sdkVersion": "49.0.0",
-    "userInterfaceStyle": "light"
+    "ios": {
+      "supportsTablet": false,
+      "bundleIdentifier": "com.nlpcalendar.example"
+    },
+    "android": {
+      "package": "com.nlpcalendar.example"
+    },
+    "sdkVersion": "49.0.0"
   }
 }
+
+
