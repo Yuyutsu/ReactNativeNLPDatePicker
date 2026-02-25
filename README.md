@@ -15,21 +15,39 @@ A reusable React Native npm package — **NLPCalendar** — that accepts natural
 
 ---
 
-## Example App
+## Example Apps
 
-A fully runnable [Expo](https://expo.dev) demo lives in the [`example/`](./example) directory.
+Two runnable demo applications live in the [`example/`](./example) directory:
+
+| | Expo | React Native CLI |
+|---|---|---|
+| **Directory** | [`example/expo/`](./example/expo/) | [`example/rn-cli/`](./example/rn-cli/) |
+| **Requires native toolchain** | ❌ (Expo Go) | ✅ (Xcode / Android Studio) |
+
+### Expo (quick start — no native setup)
 
 ```sh
-# 1. Build the library (from repo root)
-npm install && npm run build
-
-# 2. Run the Expo example
-cd example
-npm install
-npm start   # then scan the QR code with Expo Go, or press i/a/w
+npm install && npm run build     # repo root
+cd example/expo && npm install
+npm start   # scan QR with Expo Go, or press i / a / w
 ```
 
-See [`example/README.md`](./example/README.md) for full setup instructions.
+### React Native CLI
+
+```sh
+npm install && npm run build     # repo root
+
+# generate native code once
+npx react-native init NLPCalendarRNCLI --template react-native-template-typescript --version 0.72.7 --skip-install
+cp -r NLPCalendarRNCLI/android example/rn-cli/ && cp -r NLPCalendarRNCLI/ios example/rn-cli/
+rm -rf NLPCalendarRNCLI
+
+cd example/rn-cli && npm install
+cd ios && pod install && cd ..   # iOS only
+npm run ios    # or: npm run android
+```
+
+See [`example/README.md`](./example/README.md) for full details on both.
 
 ---
 
