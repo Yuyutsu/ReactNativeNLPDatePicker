@@ -15,6 +15,24 @@ A reusable React Native npm package — **NLPCalendar** — that accepts natural
 
 ---
 
+## Example App
+
+A fully runnable [Expo](https://expo.dev) demo lives in the [`example/`](./example) directory.
+
+```sh
+# 1. Build the library (from repo root)
+npm install && npm run build
+
+# 2. Run the Expo example
+cd example
+npm install
+npm start   # then scan the QR code with Expo Go, or press i/a/w
+```
+
+See [`example/README.md`](./example/README.md) for full setup instructions.
+
+---
+
 ## Installation
 
 ```sh
