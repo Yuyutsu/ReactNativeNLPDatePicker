@@ -1,0 +1,18 @@
+{
+  "expo": {
+    "name": "NLPCalendar Example",
+    "slug": "nlp-calendar-example",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "userInterfaceStyle": "light",
+    "newArchEnabled": false,
+    "platforms": ["ios", "android", "web"],
+    "ios": {
+      "supportsTablet": false,
+      "bundleIdentifier": "com.nlpcalendar.example"
+    },
+    "android": {
+      "package": "com.nlpcalendar.example"
+    }
+  }
+}

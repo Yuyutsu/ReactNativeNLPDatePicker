@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- 
+  Placeholder app icon (1024×1024).
+  Replace with your actual PNG icon before publishing.
+  Expo requires: icon.png (1024×1024 PNG), adaptive-icon.png (1024×1024 PNG),
+  splash.png (1284×2778 PNG), favicon.png (48×48 PNG).
+  
+  To generate a proper icon, use: https://www.appicon.co/
+  or run: npx expo-image-utils icon ./assets/icon.png
+-->
+<svg xmlns="http://www.w3.org/2000/svg" width="1024" height="1024" viewBox="0 0 1024 1024">
+  <rect width="1024" height="1024" fill="#4a6cf7" rx="180"/>
+  <text x="512" y="560" font-size="400" text-anchor="middle" fill="white" font-family="Arial">📅</text>
+</svg>

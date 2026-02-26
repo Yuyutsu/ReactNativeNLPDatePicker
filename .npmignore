@@ -1,0 +1,36 @@
+# Source — consumers get the compiled lib/ only
+src/
+
+# Example apps
+example/
+
+# Tests and test fixtures
+**/__tests__/
+**/*.test.ts
+**/*.test.tsx
+**/*.spec.ts
+**/*.spec.tsx
+
+# TypeScript config / build config (not needed at runtime)
+tsconfig.json
+babel.config.js
+
+# Dev tooling
+.eslintrc*
+.prettierrc*
+.editorconfig
+
+# CI / GitHub
+.github/
+
+# Package manager lock files and caches
+package-lock.json
+yarn.lock
+pnpm-lock.yaml
+.npm/
+
+# Misc
+.git/
+.gitignore
+*.tgz
+*.log
