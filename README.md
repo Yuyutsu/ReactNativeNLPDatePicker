@@ -179,6 +179,19 @@ npm run lint   # type-check only (tsc --noEmit)
 
 The package is published automatically via GitHub Actions whenever a new **GitHub Release** is created. The workflow is defined in [`.github/workflows/publish.yml`](./.github/workflows/publish.yml).
 
+> **⚠️ Required before the first publish — add your npm token as a GitHub secret**
+>
+> The workflow will fail with `ENEEDAUTH` if the `NPM_TOKEN` secret is missing. Do this **once**:
+>
+> 1. Log in to [npmjs.com](https://www.npmjs.com) → click your avatar → **Access Tokens** → **Generate New Token**
+> 2. Choose token type **"Automation"** and copy the token value
+> 3. In this GitHub repository: **Settings → Secrets and variables → Actions → New repository secret**
+>    - **Name:** `NPM_TOKEN`
+>    - **Value:** paste the token you just copied
+>    - Click **Add secret**
+>
+> The workflow will now pick up the token automatically on every release.
+
 ### One-time setup (maintainers only)
 
 1. **Create an npm account** at [npmjs.com](https://www.npmjs.com) if you haven't already.
@@ -189,7 +202,7 @@ The package is published automatically via GitHub Actions whenever a new **GitHu
    - Copy the token value
 
 3. **Add the token to GitHub repository secrets**:
-   - Go to the GitHub repo → Settings → Secrets and variables → Actions
+   - Go to: **[Repository Settings → Secrets → Actions](https://github.com/Yuyutsu/ReactNativeNLPDatePicker/settings/secrets/actions)**
    - Click **New repository secret**
    - Name: `NPM_TOKEN`
    - Value: paste the npm token
@@ -209,6 +222,7 @@ git push && git push --tags
 #    Select the tag just pushed → fill in release notes → click "Publish release"
 #
 #    The publish.yml workflow will automatically:
+#      - Verify NPM_TOKEN is set (fails fast with clear instructions if missing)
 #      - Install dependencies
 #      - Type-check + run tests
 #      - Build the package
@@ -218,6 +232,9 @@ git push && git push --tags
 ### Manual publish (if needed)
 
 ```sh
+# Ensure you are logged in to npm
+npm login
+
 # Build the package first
 npm run build
 
@@ -227,4 +244,5 @@ npm pack --dry-run
 # Publish
 npm publish --access public
 ```
+
 
