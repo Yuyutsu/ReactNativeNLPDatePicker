@@ -13,15 +13,29 @@
     "test": "jest",
     "lint": "tsc --noEmit"
   },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Yuyutsu/ReactNativeNLPDatePicker.git"
+  },
+  "homepage": "https://github.com/Yuyutsu/ReactNativeNLPDatePicker#readme",
+  "bugs": {
+    "url": "https://github.com/Yuyutsu/ReactNativeNLPDatePicker/issues"
+  },
+  "author": "Yuyutsu",
+  "license": "MIT",
   "keywords": [
     "react-native",
     "nlp",
     "calendar",
     "date-parser",
-    "typescript"
+    "natural-language",
+    "typescript",
+    "ios",
+    "android"
   ],
-  "author": "",
-  "license": "MIT",
+  "engines": {
+    "node": ">=18"
+  },
   "peerDependencies": {
     "react": ">=18.3.0",
     "react-native": ">=0.73.0"

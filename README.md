@@ -1,4 +1,9 @@
-# ReactNativeNLPDatePicker
+# react-native-nlp-calendar
+
+[![npm version](https://img.shields.io/npm/v/react-native-nlp-calendar.svg?style=flat)](https://www.npmjs.com/package/react-native-nlp-calendar)
+[![npm downloads](https://img.shields.io/npm/dm/react-native-nlp-calendar.svg?style=flat)](https://www.npmjs.com/package/react-native-nlp-calendar)
+[![CI](https://github.com/Yuyutsu/ReactNativeNLPDatePicker/actions/workflows/ci.yml/badge.svg)](https://github.com/Yuyutsu/ReactNativeNLPDatePicker/actions/workflows/ci.yml)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
 A reusable React Native npm package — **NLPCalendar** — that accepts natural language text, parses dates using a lightweight NLP layer, and renders the resulting structured calendar events in a simple declarative UI.
 
@@ -12,6 +17,41 @@ A reusable React Native npm package — **NLPCalendar** — that accepts natural
 - ✅ No external UI libraries — only `View` and `Text` from React Native
 - ✅ Graceful error handling — never crashes on invalid input
 - ✅ Fully testable and extensible NLP layer
+
+---
+
+## Installation
+
+```sh
+npm install react-native-nlp-calendar
+# or
+yarn add react-native-nlp-calendar
+```
+
+**Peer dependencies** (install if not already present):
+
+```sh
+npm install react react-native
+```
+
+---
+
+## Usage
+
+```tsx
+import { NLPCalendar } from 'react-native-nlp-calendar';
+
+// Minimal usage
+<NLPCalendar text="Book meeting tomorrow at 10am" />
+
+// With callback
+<NLPCalendar
+  text="Team sync next Friday at 3pm"
+  onParsed={(events) => console.log(events)}
+/>
+```
+
+`onParsed` receives a `ReadonlyArray<CalendarEvent>` every time parsing runs.
 
 ---
 
@@ -36,45 +76,12 @@ npm start   # scan QR with Expo Go, or press i / a / w
 
 ```sh
 npm install && npm run build     # repo root
-
-# generate native code once
-npx react-native init NLPCalendarRNCLI --template react-native-template-typescript --version 0.72.7 --skip-install
-cp -r NLPCalendarRNCLI/android example/rn-cli/ && cp -r NLPCalendarRNCLI/ios example/rn-cli/
-rm -rf NLPCalendarRNCLI
-
 cd example/rn-cli && npm install
 cd ios && pod install && cd ..   # iOS only
 npm run ios    # or: npm run android
 ```
 
 See [`example/README.md`](./example/README.md) for full details on both.
-
----
-
-## Installation
-
-```sh
-npm install react-native-nlp-calendar
-```
-
----
-
-## Usage
-
-```tsx
-import { NLPCalendar } from 'react-native-nlp-calendar';
-
-// Minimal usage
-<NLPCalendar text="Book meeting tomorrow at 10am" />
-
-// With callback
-<NLPCalendar
-  text="Team sync next Friday at 3pm"
-  onParsed={(events) => console.log(events)}
-/>
-```
-
-`onParsed` receives a `ReadonlyArray<CalendarEvent>` every time parsing runs.
 
 ---
 
@@ -165,3 +172,59 @@ npm test       # run Jest tests
 npm run build  # compile TypeScript to lib/
 npm run lint   # type-check only (tsc --noEmit)
 ```
+
+---
+
+## Publishing to npm
+
+The package is published automatically via GitHub Actions whenever a new **GitHub Release** is created. The workflow is defined in [`.github/workflows/publish.yml`](./.github/workflows/publish.yml).
+
+### One-time setup (maintainers only)
+
+1. **Create an npm account** at [npmjs.com](https://www.npmjs.com) if you haven't already.
+
+2. **Generate an npm access token**:
+   - Log in to [npmjs.com](https://www.npmjs.com) → Profile → Access Tokens → Generate New Token
+   - Choose **"Automation"** token type (for CI)
+   - Copy the token value
+
+3. **Add the token to GitHub repository secrets**:
+   - Go to the GitHub repo → Settings → Secrets and variables → Actions
+   - Click **New repository secret**
+   - Name: `NPM_TOKEN`
+   - Value: paste the npm token
+   - Click **Add secret**
+
+### How to publish a new version
+
+```sh
+# 1. Bump the version in package.json
+npm version patch   # or: minor | major
+
+# 2. Push the version commit and tag
+git push && git push --tags
+
+# 3. Create a GitHub Release
+#    Go to: https://github.com/Yuyutsu/ReactNativeNLPDatePicker/releases/new
+#    Select the tag just pushed → fill in release notes → click "Publish release"
+#
+#    The publish.yml workflow will automatically:
+#      - Install dependencies
+#      - Type-check + run tests
+#      - Build the package
+#      - Publish to npm with provenance attestation
+```
+
+### Manual publish (if needed)
+
+```sh
+# Build the package first
+npm run build
+
+# Verify the tarball contents (should only contain lib/ + README + package.json)
+npm pack --dry-run
+
+# Publish
+npm publish --access public
+```
+
