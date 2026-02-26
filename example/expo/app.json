@@ -5,6 +5,7 @@
     "version": "1.0.0",
     "orientation": "portrait",
     "userInterfaceStyle": "light",
+    "newArchEnabled": false,
     "platforms": ["ios", "android", "web"],
     "ios": {
       "supportsTablet": false,
@@ -12,9 +13,6 @@
     },
     "android": {
       "package": "com.nlpcalendar.example"
-    },
-    "sdkVersion": "49.0.0"
+    }
   }
 }
-
-

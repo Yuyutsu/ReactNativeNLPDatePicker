@@ -74,15 +74,20 @@ npm start
 
 ## Native project details
 
-The `android/` and `ios/` native project directories are **fully committed** to this repository. They are based on the standard React Native 0.72.7 template with:
+The `android/` and `ios/` native project directories are **fully committed** to this repository. They are based on the standard React Native 0.76.5 template with:
 
 | Setting | Value |
 |---|---|
 | App name | `NLPCalendarRNCLI` |
 | Android package | `com.nlpcalendarrncli` |
 | iOS bundle ID | `com.nlpcalendarrncli` |
-| Min Android SDK | 21 (Android 5.0) |
-| iOS deployment target | 13.0 |
+| Min Android SDK | 24 (Android 7.0) |
+| Target / compile Android SDK | 35 (Android 15) |
+| NDK | 27.1.12297006 |
+| AGP | 8.3.2 |
+| Kotlin | 1.9.24 |
+| Gradle | 8.8 |
+| iOS deployment target | 15.1 |
 | JS engine | Hermes |
 
 ### Gradle wrapper
@@ -91,10 +96,10 @@ The `android/gradlew` script references `gradle/wrapper/gradle-wrapper.jar`. If 
 
 ```sh
 cd android
-gradle wrapper --gradle-version=8.0.1
+gradle wrapper --gradle-version=8.8
 ```
 
-Or install Gradle 8.0.1 system-wide and the wrapper will download automatically on first `./gradlew` run.
+Or install Gradle 8.8 system-wide and the wrapper will download automatically on first `./gradlew` run.
 
 ---
 
@@ -115,7 +120,7 @@ npm run build
 |---|---|---|
 | Entry point | `node_modules/expo/AppEntry.js` | `index.js` (AppRegistry) |
 | Status bar | `expo-status-bar` | `StatusBar` from `react-native` |
-| Babel preset | `babel-preset-expo` | `metro-react-native-babel-preset` |
+| Babel preset | `babel-preset-expo` | `@react-native/babel-preset` |
 | Metro config | `expo/metro-config` | `@react-native/metro-config` |
 | Requires native build | ❌ (Expo Go handles it) | ✅ (Xcode / Android Studio) |
 | Web support | ✅ | ❌ |
@@ -129,7 +134,7 @@ example/rn-cli/
   index.js                          AppRegistry entry point
   App.tsx                           Main demo screen
   app.json                          App name / displayName
-  babel.config.js                   metro-react-native-babel-preset
+  babel.config.js                   @react-native/babel-preset
   metro.config.js                   Metro config — watches repo root for lib changes
   package.json                      Dependencies; library linked via "file:../.."
   tsconfig.json                     TypeScript config (extends @tsconfig/react-native)
