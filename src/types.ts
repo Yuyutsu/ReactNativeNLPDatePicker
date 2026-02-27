@@ -22,16 +22,30 @@ export interface ParseResult {
   readonly warning?: string;
 }
 
+/** A date range with ISO-8601 start and end dates. */
+export interface DateRange {
+  /** ISO-8601 start date string, e.g. "2024-03-15". */
+  readonly start: string;
+  /** ISO-8601 end date string, e.g. "2024-03-20". */
+  readonly end: string;
+}
+
 /** Props accepted by the NLPCalendar component. */
 export interface NLPCalendarProps {
   /**
-   * Natural language text describing one or more events.
+   * Initial natural language text for the input field.
    * Example: "Team sync tomorrow at 3pm"
    */
-  readonly text: string;
+  readonly text?: string;
+  /** Placeholder shown in the text input when empty. */
+  readonly placeholder?: string;
   /**
    * Called after every successful parse (including empty-event results).
    * Never called when text is empty/whitespace.
    */
   readonly onParsed?: (events: ReadonlyArray<CalendarEvent>) => void;
+  /** Called when the user confirms a single date in the date picker. */
+  readonly onDateChange?: (date: string) => void;
+  /** Called when the user confirms a date range in the date picker. */
+  readonly onDateRangeChange?: (range: DateRange) => void;
 }
