@@ -93,6 +93,10 @@ See [`example/README.md`](./example/README.md) for full details on both.
 | `tomorrow` | "Meeting tomorrow at 10am" |
 | `yesterday` | "Missed call yesterday" |
 | `in N days` | "Doctor appointment in 5 days" |
+| `after N days` | "Call after 3 days at 4pm to 5pm" |
+| `before N days` | "Event before 2 days" |
+| `next month` | "Review next month" |
+| `next year` | "Conference next year" |
 | `next <weekday>` | "Gym next Monday" |
 | `Month Day` | "Dentist March 15" |
 | `Month Day Year` | "Conference June 20 2025" |
@@ -100,8 +104,11 @@ See [`example/README.md`](./example/README.md) for full details on both.
 | `YYYY-MM-DD` | "Flight 2025-06-20" |
 | `MM/DD/YYYY` | "Event 06/20/2025" |
 | `at Xam/pm` | "Meeting at 3pm" |
+| `from Xam/pm` | "Workshop from 9am" |
 | `at HH:MM` | "Lunch at 14:00" |
 | `at X:XXam/pm` | "Call at 10:30am" |
+| `at Xpm to Ypm` | "Call after 3 days at 4pm to 5pm" |
+| `from Xam to Ypm` | "Workshop today from 9am to 5pm" |
 
 ---
 
@@ -122,9 +129,10 @@ Pure function — can be used independently of the component.
 
 ```ts
 interface CalendarEvent {
-  title: string;   // Event title derived from input
-  date: string;    // ISO-8601 date "YYYY-MM-DD"
-  time?: string;   // Optional 24-h time "HH:MM"
+  title: string;    // Event title derived from input
+  date: string;     // ISO-8601 date "YYYY-MM-DD"
+  time?: string;    // Optional start time in 24-h format "HH:MM"
+  endTime?: string; // Optional end time in 24-h format "HH:MM"
 }
 
 interface ParseResult {

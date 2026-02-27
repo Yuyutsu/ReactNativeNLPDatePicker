@@ -25,8 +25,9 @@ const offsetDate = (days: number): Date => {
 const toISODate = (d: Date): string => d.toISOString().slice(0, 10);
 
 /**
- * Resolves relative day words ("today", "tomorrow", "yesterday") and
- * "next <weekday>" patterns to an ISO date string.
+ * Resolves relative day words ("today", "tomorrow", "yesterday"),
+ * "in/after N days", "before N days", "next <weekday>",
+ * "next month", and "next year" to an ISO date string.
  * Returns `null` when no relative date is found.
  */
 const resolveRelativeDate = (text: string): string | null => {
@@ -38,6 +39,28 @@ const resolveRelativeDate = (text: string): string | null => {
 
   const inDaysMatch = lower.match(/\bin\s+(\d+)\s+days?\b/);
   if (inDaysMatch) return toISODate(offsetDate(Number(inDaysMatch[1])));
+
+  const afterDaysMatch = lower.match(/\bafter\s+(\d+)\s+days?\b/);
+  if (afterDaysMatch) return toISODate(offsetDate(Number(afterDaysMatch[1])));
+
+  const beforeDaysMatch = lower.match(/\bbefore\s+(\d+)\s+days?\b/);
+  if (beforeDaysMatch) return toISODate(offsetDate(-Number(beforeDaysMatch[1])));
+
+  if (/\bnext\s+month\b/.test(lower)) {
+    const now = new Date();
+    const year = now.getUTCFullYear();
+    const nextMonthIndex = now.getUTCMonth() + 1;
+    return toISODate(new Date(Date.UTC(
+      nextMonthIndex === 12 ? year + 1 : year,
+      nextMonthIndex === 12 ? 0 : nextMonthIndex,
+      1,
+    )));
+  }
+
+  if (/\bnext\s+year\b/.test(lower)) {
+    const now = new Date();
+    return toISODate(new Date(Date.UTC(now.getUTCFullYear() + 1, 0, 1)));
+  }
 
   const nextWeekdayMatch = lower.match(
     /\bnext\s+(monday|tuesday|wednesday|thursday|friday|saturday|sunday)\b/,
@@ -127,25 +150,37 @@ const resolveAbsoluteDate = (text: string): string | null => {
   return null;
 };
 
+/** Converts matched hour/minute/meridiem strings into a "HH:MM" string. */
+const formatTime = (h: string, m: string | undefined, suffix: string | undefined): string => {
+  let hours = Number(h);
+  const minutes = m ? Number(m) : 0;
+  const meridiem = suffix?.toLowerCase();
+  if (meridiem === 'pm' && hours < 12) hours += 12;
+  if (meridiem === 'am' && hours === 12) hours = 0;
+  return `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}`;
+};
+
 /**
- * Extracts a time string ("HH:MM") from natural language.
- * Handles patterns like "at 3pm", "at 10:30am", "at 14:00".
+ * Extracts a start time string ("HH:MM") from natural language.
+ * Handles patterns like "at 3pm", "at 10:30am", "at 14:00",
+ * "from 4pm", "from 10:30am".
  * Returns `undefined` when no time is found.
  */
 const extractTime = (text: string): string | undefined => {
-  const match = text.match(/\bat\s+(\d{1,2})(?::(\d{2}))?\s*(am|pm)?\b/i);
+  const match = text.match(/\b(?:at|from)\s+(\d{1,2})(?::(\d{2}))?\s*(am|pm)?\b/i);
   if (!match) return undefined;
+  return formatTime(match[1], match[2], match[3]);
+};
 
-  let hours = Number(match[1]);
-  const minutes = match[2] ? Number(match[2]) : 0;
-  const meridiem = match[3]?.toLowerCase();
-
-  if (meridiem === 'pm' && hours < 12) hours += 12;
-  if (meridiem === 'am' && hours === 12) hours = 0;
-
-  const hh = String(hours).padStart(2, '0');
-  const mm = String(minutes).padStart(2, '0');
-  return `${hh}:${mm}`;
+/**
+ * Extracts an end time string ("HH:MM") from natural language.
+ * Handles patterns like "to 5pm", "to 17:30".
+ * Returns `undefined` when no end time is found.
+ */
+const extractEndTime = (text: string): string | undefined => {
+  const match = text.match(/\bto\s+(\d{1,2})(?::(\d{2}))?\s*(am|pm)?\b/i);
+  if (!match) return undefined;
+  return formatTime(match[1], match[2], match[3]);
 };
 
 /**
@@ -154,10 +189,14 @@ const extractTime = (text: string): string | undefined => {
  */
 const extractTitle = (text: string): string => {
   const stripped = text
-    .replace(/\bat\s+\d{1,2}(?::\d{2})?\s*(?:am|pm)?\b/gi, '')
+    .replace(/\b(?:at|from)\s+\d{1,2}(?::\d{2})?\s*(?:am|pm)?\b/gi, '')
+    .replace(/\bto\s+\d{1,2}(?::\d{2})?\s*(?:am|pm)?\b/gi, '')
     .replace(/\b(?:next\s+)?(?:monday|tuesday|wednesday|thursday|friday|saturday|sunday)\b/gi, '')
+    .replace(/\bnext\s+(?:month|year)\b/gi, '')
     .replace(/\b(?:today|tomorrow|yesterday)\b/gi, '')
     .replace(/\bin\s+\d+\s+days?\b/gi, '')
+    .replace(/\bafter\s+\d+\s+days?\b/gi, '')
+    .replace(/\bbefore\s+\d+\s+days?\b/gi, '')
     .replace(/\b(?:january|february|march|april|may|june|july|august|september|october|november|december|jan|feb|mar|apr|jun|jul|aug|sep|sept|oct|nov|dec)\s+\d{1,2}(?:\s+\d{4})?\b/gi, '')
     .replace(/\b\d{1,2}\s+(?:january|february|march|april|may|june|july|august|september|october|november|december|jan|feb|mar|apr|jun|jul|aug|sep|sept|oct|nov|dec)(?:\s+\d{4})?\b/gi, '')
     .replace(/\b\d{4}-\d{2}-\d{2}\b/g, '')
@@ -201,9 +240,15 @@ export const parseNaturalLanguage = (text: string): ParseResult => {
   }
 
   const time = extractTime(trimmed);
+  const endTime = extractEndTime(trimmed);
   const title = extractTitle(trimmed);
 
-  const event: CalendarEvent = { title, date, ...(time !== undefined && { time }) };
+  const event: CalendarEvent = {
+    title,
+    date,
+    ...(time !== undefined && { time }),
+    ...(endTime !== undefined && { endTime }),
+  };
 
   return { events: [event] };
 };

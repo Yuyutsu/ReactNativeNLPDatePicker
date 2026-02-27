@@ -66,6 +66,35 @@ describe('parseNaturalLanguage — relative dates', () => {
     expect(result.events[0].date).toBe(offsetISO(5));
   });
 
+  it('parses "after N days"', () => {
+    const result = parseNaturalLanguage('Call after 3 days');
+    expect(result.events).toHaveLength(1);
+    expect(result.events[0].date).toBe(offsetISO(3));
+  });
+
+  it('parses "before N days"', () => {
+    const result = parseNaturalLanguage('Event before 2 days');
+    expect(result.events).toHaveLength(1);
+    expect(result.events[0].date).toBe(offsetISO(-2));
+  });
+
+  it('parses "next month"', () => {
+    const expected = new Date();
+    expected.setMonth(expected.getMonth() + 1);
+    expected.setDate(1);
+    const result = parseNaturalLanguage('Review next month');
+    expect(result.events).toHaveLength(1);
+    expect(result.events[0].date).toBe(expected.toISOString().slice(0, 10));
+  });
+
+  it('parses "next year"', () => {
+    const expected = new Date();
+    expected.setFullYear(expected.getFullYear() + 1, 0, 1);
+    const result = parseNaturalLanguage('Conference next year');
+    expect(result.events).toHaveLength(1);
+    expect(result.events[0].date).toBe(expected.toISOString().slice(0, 10));
+  });
+
   it('parses "next Monday"', () => {
     const result = parseNaturalLanguage('Gym next Monday');
     const date = new Date(result.events[0].date);
@@ -145,9 +174,30 @@ describe('parseNaturalLanguage — time extraction', () => {
     expect(result.events[0].time).toBe('00:00');
   });
 
+  it('extracts start time with "from Xpm"', () => {
+    const result = parseNaturalLanguage('Workshop today from 9am');
+    expect(result.events[0].time).toBe('09:00');
+  });
+
+  it('extracts end time with "to Xpm"', () => {
+    const result = parseNaturalLanguage('Workshop today from 9am to 5pm');
+    expect(result.events[0].endTime).toBe('17:00');
+  });
+
+  it('extracts time range "at 4pm to 5pm"', () => {
+    const result = parseNaturalLanguage('Call after 3 days at 4pm to 5pm');
+    expect(result.events[0].time).toBe('16:00');
+    expect(result.events[0].endTime).toBe('17:00');
+  });
+
   it('leaves time undefined when no time is specified', () => {
     const result = parseNaturalLanguage('Gym tomorrow');
     expect(result.events[0].time).toBeUndefined();
+  });
+
+  it('leaves endTime undefined when no end time is specified', () => {
+    const result = parseNaturalLanguage('Gym tomorrow at 8am');
+    expect(result.events[0].endTime).toBeUndefined();
   });
 });
 
@@ -159,6 +209,21 @@ describe('parseNaturalLanguage — title extraction', () => {
   it('strips date keywords from the title', () => {
     const result = parseNaturalLanguage('Book meeting tomorrow at 10am');
     expect(result.events[0].title).toBe('Book meeting');
+  });
+
+  it('strips "after N days" from the title', () => {
+    const result = parseNaturalLanguage('Call after 3 days at 4pm to 5pm');
+    expect(result.events[0].title).toBe('Call');
+  });
+
+  it('strips "next month" from the title', () => {
+    const result = parseNaturalLanguage('Review next month');
+    expect(result.events[0].title).toBe('Review');
+  });
+
+  it('strips "next year" from the title', () => {
+    const result = parseNaturalLanguage('Conference next year');
+    expect(result.events[0].title).toBe('Conference');
   });
 
   it('uses full text as title when only date/time remains after stripping', () => {
