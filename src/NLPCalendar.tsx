@@ -54,6 +54,7 @@ const EventItem: React.FC<EventItemProps> = ({ event }) => (
     <Text style={styles.eventMeta}>
       {event.date}
       {event.time !== undefined ? ` · ${event.time}` : ''}
+      {event.endTime !== undefined ? ` – ${event.endTime}` : ''}
     </Text>
   </View>
 );

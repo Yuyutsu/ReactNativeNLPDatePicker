@@ -10,8 +10,10 @@ export interface CalendarEvent {
   readonly title: string;
   /** ISO-8601 date string, e.g. "2024-03-15". */
   readonly date: string;
-  /** Optional time in 24-hour format "HH:MM", e.g. "10:00". */
+  /** Optional start time in 24-hour format "HH:MM", e.g. "10:00". */
   readonly time?: string;
+  /** Optional end time in 24-hour format "HH:MM", e.g. "17:00". */
+  readonly endTime?: string;
 }
 
 /** Result returned by the NLP parser layer. */
