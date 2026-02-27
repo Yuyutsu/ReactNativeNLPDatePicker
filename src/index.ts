@@ -7,4 +7,4 @@
 
 export { default as NLPCalendar } from './NLPCalendar';
 export { parseNaturalLanguage } from './parser';
-export type { CalendarEvent, NLPCalendarProps, ParseResult } from './types';
+export type { CalendarEvent, DateRange, NLPCalendarProps, ParseResult } from './types';
