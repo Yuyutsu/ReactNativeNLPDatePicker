@@ -1,6 +1,6 @@
 {
   "name": "react-native-nlp-calendar",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "A reusable React Native package that accepts natural language text, parses dates using an NLP layer, and renders them as structured calendar events.",
   "main": "lib/index.js",
   "types": "lib/index.d.ts",
