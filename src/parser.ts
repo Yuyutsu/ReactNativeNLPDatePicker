@@ -8,7 +8,7 @@
  * without touching any UI code.
  */
 
-import type { CalendarEvent, ParseResult } from './types';
+import type { CalendarEvent, Occurrence, ParseOptions, ParseResult, RecurrenceInfo } from './types';
 
 // ---------------------------------------------------------------------------
 // Internal helpers
@@ -160,16 +160,42 @@ const formatTime = (h: string, m: string | undefined, suffix: string | undefined
   return `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}`;
 };
 
+/** Maps natural time-of-day keywords to default 24-hour times. */
+const NATURAL_TIME_MAP: Record<string, string> = {
+  morning: '09:00',
+  afternoon: '14:00',
+  evening: '18:00',
+  night: '20:00',
+};
+
+/**
+ * Extracts a time from natural time-of-day keywords like "morning" or "evening".
+ * Returns `undefined` when no keyword is found.
+ */
+const extractNaturalTimeKeyword = (text: string): string | undefined => {
+  const match = text.toLowerCase().match(/\b(morning|afternoon|evening|night)\b/);
+  return match ? NATURAL_TIME_MAP[match[1]] : undefined;
+};
+
 /**
  * Extracts a start time string ("HH:MM") from natural language.
- * Handles patterns like "at 3pm", "at 10:30am", "at 14:00",
- * "from 4pm", "from 10:30am".
+ * Handles:
+ *   - "at 3pm" / "from 10:30am" / "at 14:00" (explicit prefix)
+ *   - bare "5pm" / "3pm" (am/pm suffix without prefix)
+ *   - natural keywords: morning, afternoon, evening, night
  * Returns `undefined` when no time is found.
  */
 const extractTime = (text: string): string | undefined => {
-  const match = text.match(/\b(?:at|from)\s+(\d{1,2})(?::(\d{2}))?\s*(am|pm)?\b/i);
-  if (!match) return undefined;
-  return formatTime(match[1], match[2], match[3]);
+  // Explicit "at" / "from" prefix takes highest priority
+  const prefixMatch = text.match(/\b(?:at|from)\s+(\d{1,2})(?::(\d{2}))?\s*(am|pm)?\b/i);
+  if (prefixMatch) return formatTime(prefixMatch[1], prefixMatch[2], prefixMatch[3]);
+
+  // Bare time with am/pm suffix e.g. "5pm", "10:30am"
+  const bareMatch = text.match(/\b(\d{1,2})(?::(\d{2}))?\s*(am|pm)\b/i);
+  if (bareMatch) return formatTime(bareMatch[1], bareMatch[2], bareMatch[3]);
+
+  // Natural time-of-day keywords as last resort
+  return extractNaturalTimeKeyword(text);
 };
 
 /**
@@ -184,27 +210,190 @@ const extractEndTime = (text: string): string | undefined => {
 };
 
 /**
+ * Extracts an event duration from phrases like "for 2 hours" or "for 30 minutes".
+ * Returns the duration in minutes, or `undefined` when not found.
+ */
+const extractDuration = (text: string): number | undefined => {
+  const lower = text.toLowerCase();
+
+  const hoursMatch = lower.match(/\bfor\s+(\d+(?:\.\d+)?)\s+hours?\b/);
+  if (hoursMatch) return Math.round(Number(hoursMatch[1]) * 60);
+
+  const minutesMatch = lower.match(/\bfor\s+(\d+)\s+minutes?\b/);
+  if (minutesMatch) return Number(minutesMatch[1]);
+
+  return undefined;
+};
+
+/**
+ * Extracts a reminder offset from phrases like "remind me 30 minutes before"
+ * or "remind me 1 hour before".
+ * Returns the offset in minutes, or `undefined` when not found.
+ */
+const extractReminder = (text: string): number | undefined => {
+  const lower = text.toLowerCase();
+
+  const minutesMatch = lower.match(/\bremind(?:\s+me)?\s+(\d+)\s+minutes?\s+before\b/);
+  if (minutesMatch) return Number(minutesMatch[1]);
+
+  const hoursMatch = lower.match(/\bremind(?:\s+me)?\s+(\d+)\s+hours?\s+before\b/);
+  if (hoursMatch) return Number(hoursMatch[1]) * 60;
+
+  return undefined;
+};
+
+/**
+ * Extracts recurrence information from phrases like "every monday",
+ * "every weekday", or "every day".
+ * Returns `null` when no recurrence pattern is found.
+ */
+const extractRecurrence = (text: string): RecurrenceInfo | null => {
+  const lower = text.toLowerCase();
+
+  if (/\bevery\s+day\b/.test(lower)) return { type: 'daily' };
+  if (/\bevery\s+weekday\b/.test(lower)) return { type: 'weekday' };
+
+  const weekdayMatch = lower.match(
+    /\bevery\s+(monday|tuesday|wednesday|thursday|friday|saturday|sunday)\b/,
+  );
+  if (weekdayMatch) return { type: 'weekly', day: weekdayMatch[1] };
+
+  return null;
+};
+
+/**
+ * Generates future occurrences for a recurrence rule.
+ * @param recurrence - The recurrence rule (type, optional day, optional time).
+ * @param count      - Number of occurrences to generate.
+ */
+const generateOccurrences = (
+  recurrence: RecurrenceInfo,
+  count: number,
+): ReadonlyArray<Occurrence> => {
+  const occurrences: Occurrence[] = [];
+  const cursor = new Date();
+
+  if (recurrence.type === 'daily') {
+    cursor.setDate(cursor.getDate() + 1); // start from tomorrow
+    for (let i = 0; i < count; i++) {
+      occurrences.push({
+        date: toISODate(cursor),
+        ...(recurrence.time !== undefined && { time: recurrence.time }),
+      });
+      cursor.setDate(cursor.getDate() + 1);
+    }
+  } else if (recurrence.type === 'weekday') {
+    cursor.setDate(cursor.getDate() + 1); // start from tomorrow
+    while (occurrences.length < count) {
+      const day = cursor.getDay();
+      if (day !== 0 && day !== 6) {
+        occurrences.push({
+          date: toISODate(cursor),
+          ...(recurrence.time !== undefined && { time: recurrence.time }),
+        });
+      }
+      cursor.setDate(cursor.getDate() + 1);
+    }
+  } else if (recurrence.type === 'weekly' && recurrence.day !== undefined) {
+    const targetDay = WEEKDAY_INDEX[recurrence.day];
+    const today = cursor.getDay();
+    let daysUntil = (targetDay - today + 7) % 7;
+    if (daysUntil === 0) daysUntil = 7; // always move to the next occurrence
+    cursor.setDate(cursor.getDate() + daysUntil);
+    for (let i = 0; i < count; i++) {
+      occurrences.push({
+        date: toISODate(cursor),
+        ...(recurrence.time !== undefined && { time: recurrence.time }),
+      });
+      cursor.setDate(cursor.getDate() + 7);
+    }
+  }
+
+  return occurrences;
+};
+
+/**
  * Derives a short event title by stripping date/time tokens from the text.
  * Falls back to the original (trimmed) text if nothing remains.
  */
 const extractTitle = (text: string): string => {
   const stripped = text
+    // Strip "every <day|weekday|day>" before generic weekday stripping
+    .replace(/\bevery\s+(?:day|weekday|monday|tuesday|wednesday|thursday|friday|saturday|sunday)\b/gi, '')
+    // Strip explicit time prefixes
     .replace(/\b(?:at|from)\s+\d{1,2}(?::\d{2})?\s*(?:am|pm)?\b/gi, '')
     .replace(/\bto\s+\d{1,2}(?::\d{2})?\s*(?:am|pm)?\b/gi, '')
+    // Strip weekday and next-month/year tokens
     .replace(/\b(?:next\s+)?(?:monday|tuesday|wednesday|thursday|friday|saturday|sunday)\b/gi, '')
     .replace(/\bnext\s+(?:month|year)\b/gi, '')
+    // Strip relative day keywords
     .replace(/\b(?:today|tomorrow|yesterday)\b/gi, '')
     .replace(/\bin\s+\d+\s+days?\b/gi, '')
     .replace(/\bafter\s+\d+\s+days?\b/gi, '')
     .replace(/\bbefore\s+\d+\s+days?\b/gi, '')
+    // Strip absolute date formats
     .replace(/\b(?:january|february|march|april|may|june|july|august|september|october|november|december|jan|feb|mar|apr|jun|jul|aug|sep|sept|oct|nov|dec)\s+\d{1,2}(?:\s+\d{4})?\b/gi, '')
     .replace(/\b\d{1,2}\s+(?:january|february|march|april|may|june|july|august|september|october|november|december|jan|feb|mar|apr|jun|jul|aug|sep|sept|oct|nov|dec)(?:\s+\d{4})?\b/gi, '')
     .replace(/\b\d{4}-\d{2}-\d{2}\b/g, '')
     .replace(/\b\d{1,2}\/\d{1,2}(?:\/\d{4})?\b/g, '')
+    // Strip new feature tokens
+    .replace(/\bfor\s+\d+(?:\.\d+)?\s+hours?\b/gi, '')
+    .replace(/\bfor\s+\d+\s+minutes?\b/gi, '')
+    .replace(/\bremind(?:\s+me)?\s+\d+\s+(?:minutes?|hours?)\s+before\b/gi, '')
+    // Strip bare time expressions with am/pm (e.g. "5pm", "10:30am")
+    .replace(/\b\d{1,2}(?::\d{2})?\s*(?:am|pm)\b/gi, '')
+    // Strip natural time keywords
+    .replace(/\b(?:morning|afternoon|evening|night)\b/gi, '')
     .replace(/\s{2,}/g, ' ')
     .trim();
 
   return stripped.length > 0 ? stripped : text.trim();
+};
+
+// ---------------------------------------------------------------------------
+// Internal single-event parser
+// ---------------------------------------------------------------------------
+
+/**
+ * Attempts to parse a single event phrase.
+ * Returns `null` when no date or recurrence is found.
+ */
+const parseSingleEvent = (text: string, options?: ParseOptions): CalendarEvent | null => {
+  const occurrenceCount = options?.occurrences ?? 3;
+
+  // Feature 1: Recurring events
+  const recurrenceBase = extractRecurrence(text);
+  if (recurrenceBase !== null) {
+    const time = extractTime(text);
+    const recurrence: RecurrenceInfo = {
+      ...recurrenceBase,
+      ...(time !== undefined && { time }),
+    };
+    const occurrences = generateOccurrences(recurrence, occurrenceCount);
+    const title = extractTitle(text);
+    return { title, recurrence, occurrences };
+  }
+
+  // Regular one-off event — must have a date
+  const relativeDate = resolveRelativeDate(text);
+  const absoluteDate = resolveAbsoluteDate(text);
+  const date = relativeDate ?? absoluteDate;
+  if (date === null) return null;
+
+  const time = extractTime(text);
+  const endTime = extractEndTime(text);
+  const durationMinutes = extractDuration(text);
+  const reminderMinutes = extractReminder(text);
+  const title = extractTitle(text);
+
+  return {
+    title,
+    date,
+    ...(time !== undefined && { time }),
+    ...(endTime !== undefined && { endTime }),
+    ...(durationMinutes !== undefined && { durationMinutes }),
+    ...(reminderMinutes !== undefined && { reminderMinutes }),
+  };
 };
 
 // ---------------------------------------------------------------------------
@@ -218,37 +407,43 @@ const extractTitle = (text: string): string => {
  * It never throws — invalid or unrecognisable input returns an empty event
  * array with an optional warning message.
  *
- * @param text - The raw natural language input from the user.
+ * Supported features:
+ *  - Recurring events: "every monday at 5pm", "every weekday at 9am", "every day at 8am"
+ *  - Event duration: "meeting tomorrow for 2 hours"
+ *  - Natural time keywords: morning (09:00), afternoon (14:00), evening (18:00), night (20:00)
+ *  - Reminder: "meeting tomorrow 5pm remind me 30 minutes before"
+ *  - Multiple events: "call today 3pm and meeting tomorrow 5pm"
+ *
+ * @param text    - The raw natural language input from the user.
+ * @param options - Optional settings (e.g. number of occurrences to generate).
  * @returns A `ParseResult` containing events and an optional warning.
  */
-export const parseNaturalLanguage = (text: string): ParseResult => {
+export const parseNaturalLanguage = (text: string, options?: ParseOptions): ParseResult => {
   const trimmed = text.trim();
 
   if (trimmed.length === 0) {
     return { events: [] };
   }
 
-  const relativeDate = resolveRelativeDate(trimmed);
-  const absoluteDate = resolveAbsoluteDate(trimmed);
-  const date = relativeDate ?? absoluteDate;
+  // Feature 5: Multiple events — split on " and " and parse each segment
+  const segments = trimmed.split(/\s+and\s+/i).map(s => s.trim()).filter(Boolean);
+  if (segments.length > 1) {
+    const parsed = segments
+      .map(seg => parseSingleEvent(seg, options))
+      .filter((e): e is CalendarEvent => e !== null);
+    if (parsed.length >= 2) {
+      return { events: parsed };
+    }
+  }
 
-  if (!date) {
+  // Single event
+  const event = parseSingleEvent(trimmed, options);
+  if (event === null) {
     return {
       events: [],
       warning: 'Could not recognise a date in the provided text.',
     };
   }
-
-  const time = extractTime(trimmed);
-  const endTime = extractEndTime(trimmed);
-  const title = extractTitle(trimmed);
-
-  const event: CalendarEvent = {
-    title,
-    date,
-    ...(time !== undefined && { time }),
-    ...(endTime !== undefined && { endTime }),
-  };
 
   return { events: [event] };
 };
