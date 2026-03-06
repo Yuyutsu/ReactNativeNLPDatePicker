@@ -258,13 +258,15 @@ const NLPCalendar: React.FC<NLPCalendarProps> = ({
       </View>
 
       {/* Parsed events list */}
-      {result.events.length === 0 ? (
+     {/** 
+     {result.events.length === 0 ? (
         <EmptyState warning={result.warning} />
       ) : (
         result.events.map((event) => (
           <EventItem key={`${event.date}-${event.title}`} event={event} />
         ))
       )}
+      */}
 
       {/* Date picker modal */}
       <Modal
