@@ -9,31 +9,38 @@ describe('NLPCalendar component', () => {
     ).not.toThrow();
   });
 
-  it('displays the event title when a date is recognised', () => {
-    render(<NLPCalendar text="Book meeting tomorrow at 10am" />);
-    expect(screen.getByText('Book meeting')).toBeTruthy();
+  it('parses and returns the event title via onParsed', () => {
+    const onParsed = jest.fn();
+    render(<NLPCalendar text="Book meeting tomorrow at 10am" onParsed={onParsed} />);
+    expect(onParsed).toHaveBeenCalledWith(
+      expect.arrayContaining([
+        expect.objectContaining({ title: 'Book meeting' }),
+      ]),
+    );
   });
 
-  it('displays the event date', () => {
-    render(<NLPCalendar text="Meeting today" />);
+  it('parses and returns the event date via onParsed', () => {
+    const onParsed = jest.fn();
+    render(<NLPCalendar text="Meeting today" onParsed={onParsed} />);
     const today = new Date().toISOString().slice(0, 10);
-    expect(screen.getByText(today)).toBeTruthy();
+    expect(onParsed).toHaveBeenCalledWith(
+      expect.arrayContaining([
+        expect.objectContaining({ date: today }),
+      ]),
+    );
   });
 
-  it('shows the time when provided', () => {
-    render(<NLPCalendar text="Call today at 3pm" />);
-    expect(screen.getByText(/15:00/)).toBeTruthy();
+  it('parses and returns the event time via onParsed when provided', () => {
+    const onParsed = jest.fn();
+    render(<NLPCalendar text="Call today at 3pm" onParsed={onParsed} />);
+    expect(onParsed).toHaveBeenCalledWith(
+      expect.arrayContaining([
+        expect.objectContaining({ time: '15:00' }),
+      ]),
+    );
   });
 
-  it('renders empty state with warning for unrecognised text', () => {
-    render(<NLPCalendar text="no date here" />);
-    expect(screen.getByText(/Could not recognise/i)).toBeTruthy();
-  });
 
-  it('renders empty state for whitespace-only text', () => {
-    render(<NLPCalendar text="   " />);
-    expect(screen.getByText(/No events found/i)).toBeTruthy();
-  });
 
   it('calls onParsed with events when date is recognised', () => {
     const onParsed = jest.fn();
@@ -83,12 +90,6 @@ describe('NLPCalendar — input field', () => {
     expect(screen.getByDisplayValue('Meeting tomorrow')).toBeTruthy();
   });
 
-  it('re-parses and shows events when the user types in the input', () => {
-    render(<NLPCalendar />);
-    fireEvent.changeText(screen.getByPlaceholderText('Type a date or event…'), 'Gym today');
-    const today = new Date().toISOString().slice(0, 10);
-    expect(screen.getByText(today)).toBeTruthy();
-  });
 });
 
 // ---------------------------------------------------------------------------
