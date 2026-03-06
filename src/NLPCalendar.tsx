@@ -16,7 +16,7 @@
 import React, { useCallback, useEffect, useState } from 'react';
 import { Modal, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import { parseNaturalLanguage } from './parser';
-import type { CalendarEvent, DateRange, NLPCalendarProps } from './types';
+import type { DateRange, NLPCalendarProps } from './types';
 
 // ---------------------------------------------------------------------------
 // Calendar helpers
@@ -40,36 +40,6 @@ const padTwo = (n: number): string => String(n).padStart(2, '0');
 const formatDateStr = (year: number, month: number, day: number): string =>
   `${year}-${padTwo(month + 1)}-${padTwo(day)}`;
 
-// ---------------------------------------------------------------------------
-// Sub-components
-// ---------------------------------------------------------------------------
-
-interface EventItemProps {
-  readonly event: CalendarEvent;
-}
-
-const EventItem: React.FC<EventItemProps> = ({ event }) => (
-  <View style={styles.eventItem}>
-    <Text style={styles.eventTitle}>{event.title}</Text>
-    <Text style={styles.eventMeta}>
-      {event.date}
-      {event.time !== undefined ? ` · ${event.time}` : ''}
-      {event.endTime !== undefined ? ` – ${event.endTime}` : ''}
-    </Text>
-  </View>
-);
-
-interface EmptyStateProps {
-  readonly warning?: string;
-}
-
-const EmptyState: React.FC<EmptyStateProps> = ({ warning }) => (
-  <View style={styles.emptyState}>
-    <Text style={styles.emptyText}>
-      {warning ?? 'No events found.'}
-    </Text>
-  </View>
-);
 
 // ---------------------------------------------------------------------------
 // Main component
@@ -256,17 +226,6 @@ const NLPCalendar: React.FC<NLPCalendarProps> = ({
           <Text style={styles.calendarIcon}>📅</Text>
         </TouchableOpacity>
       </View>
-
-      {/* Parsed events list */}
-     {/** 
-     {result.events.length === 0 ? (
-        <EmptyState warning={result.warning} />
-      ) : (
-        result.events.map((event) => (
-          <EventItem key={`${event.date}-${event.title}`} event={event} />
-        ))
-      )}
-      */}
 
       {/* Date picker modal */}
       <Modal
