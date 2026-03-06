@@ -55,6 +55,13 @@ import { NLPCalendar } from 'react-native-nlp-calendar';
 
 ---
 
+##DEMO
+
+
+https://github.com/user-attachments/assets/62e7d2f6-6d09-4633-abf1-6eeb80d7f67a
+
+
+
 ## Example Apps
 
 Two runnable demo applications live in the [`example/`](./example) directory:
